@@ -1,53 +1,41 @@
 <% blazer_title @dashboard.name %>
-
 <div class="topbar">
-  <div class="container">
-    <div class="row" style="padding-top: 13px;">
-      <div class="col-sm-9">
-        <%= render partial: "blazer/nav" %>
-        <h3 style="line-height: 34px; display: inline; margin-left: 5px;">
-          <%= @dashboard.name %>
-        </h3>
-      </div>
-      <div class="col-sm-3 text-right">
-        <%= link_to "Edit", edit_dashboard_path(@dashboard, params: variable_params(@dashboard)), class: "btn btn-info" %>
-      </div>
+  <div class="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-3.5 sm:px-8">
+    <div class="flex items-center gap-3 min-w-0">
+      <%= render partial: "blazer/nav" %>
+      <h3 class="truncate text-lg font-bold tracking-tight"><%= @dashboard.name %></h3>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= link_to "Edit", edit_dashboard_path(@dashboard, params: variable_params(@dashboard)), class: "btn btn-info" %>
     </div>
   </div>
 </div>
-
-<div style="margin-bottom: 60px;"></div>
-
-<% if @data_sources.any? { |ds| ds.cache_mode != "off" } %>
-  <p class="text-muted" style="float: right;">
-    Some queries may be cached
-    <%= link_to "Refresh", refresh_dashboard_path(@dashboard, params: variable_params(@dashboard)), method: :post %>
-  </p>
-<% end %>
-
-<% if @bind_vars.any? %>
-  <%= render partial: "blazer/variables", locals: {action: dashboard_path(@dashboard)} %>
-<% else %>
-  <div style="padding-bottom: 15px;"></div>
-<% end %>
-
-<% @queries.each_with_index do |query, i| %>
-  <div class="chart-container">
-    <h4><%= link_to query.friendly_name, query_path(query, params: variable_params(query)), target: "_blank" %></h4>
-    <div id="chart-<%= i %>" class="chart">
-      <p class="text-muted">Loading...</p>
-    </div>
-  </div>
-  <%= javascript_tag nonce: true do %>
-    <% data = {statement: query.statement, query_id: query.id, data_source: query.data_source, variables: variable_params(query), only_chart: true} %>
-    <% data.merge!(cohort_period: params[:cohort_period]) if params[:cohort_period] %>
-    <%= blazer_js_var "data", data %>
-
-    runQuery(data, function (data) {
-      $("#chart-<%= i %>").html(data)
-      $("#chart-<%= i %> table").stupidtable(stupidtableCustomSettings)
-    }, function (message) {
-      $("#chart-<%= i %>").addClass("query-error").html(message)
-    });
+<main class="mt-20 flex flex-col gap-4">
+  <% if @data_sources.any? { |ds| ds.cache_mode != "off" } %>
+    <section class="rounded-2xl border border-[var(--wz-border)] bg-white/95 px-5 py-3 shadow-[var(--wz-shadow-sm)]">
+      <p class="text-muted text-sm">
+        Some queries may be cached.
+        <%= link_to "Refresh", refresh_dashboard_path(@dashboard, params: variable_params(@dashboard)), method: :post, class: "ml-2 font-medium" %>
+      </p>
+    </section>
   <% end %>
-<% end %>
+  <section class="rounded-2xl border border-[var(--wz-border)] bg-white/95 p-5 shadow-[var(--wz-shadow-sm)]">
+    <% if @bind_vars.any? %>
+      <%= render partial: "blazer/variables", locals: {action: dashboard_path(@dashboard)} %>
+    <% else %>
+      <p class="text-muted text-sm">No variables configured for this dashboard.</p>
+    <% end %>
+  </section>
+  <% @queries.each_with_index do |query, i| %>
+    <% chart_data = {statement: query.statement, query_id: query.id, data_source: query.data_source, variables: variable_params(query), only_chart: true} %>
+    <% chart_data.merge!(cohort_period: params[:cohort_period]) if params[:cohort_period] %>
+    <section class="chart-container rounded-2xl border border-[var(--wz-border)] bg-white/95 p-5 shadow-[var(--wz-shadow-sm)]"
+      data-controller="blazer--dashboard-chart"
+      data-blazer--dashboard-chart-run-data-value="<%= chart_data.to_json %>">
+      <h4 class="text-center text-base font-bold mb-3"><%= link_to query.friendly_name, query_path(query, params: variable_params(query)), target: "_blank" %></h4>
+      <div id="chart-<%= i %>" class="chart" data-blazer--dashboard-chart-target="chart">
+        <p class="text-muted text-sm">Loading...</p>
+      </div>
+    </section>
+  <% end %>
+</main>

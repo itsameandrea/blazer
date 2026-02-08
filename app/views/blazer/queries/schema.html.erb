@@ -1,55 +1,37 @@
 <% blazer_title "Schema: #{@data_source.name}" %>
-
-<h1>Schema: <%= @data_source.name %></h1>
-
-<hr />
-
-<div id="header">
-  <input id="search" type="text" placeholder="Start typing a table or column" style="width: 300px; display: inline-block;" class="search form-control" />
+<div class="topbar">
+  <div class="mx-auto flex max-w-[1280px] items-center px-5 py-3.5 sm:px-8">
+    <div class="flex items-center gap-3">
+      <%= render partial: "blazer/nav" %>
+      <h3 class="text-lg font-bold tracking-tight">Schema: <%= @data_source.name %></h3>
+    </div>
+  </div>
 </div>
-
-<% @schema.each do |table| %>
-  <table class="table schema-table">
-    <thead>
-      <tr>
-        <th colspan="2">
-          <% if table[:schema] && table[:schema] != "public" %><%= table[:schema] %>.<% end %><%= table[:table] %>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <% table[:columns].each do |column| %>
-        <tr>
-          <td style="width: 60%;"><%= column[:name] %></td>
-          <td class="text-muted"><%= column[:data_type] %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% end %>
-
-<%= javascript_tag nonce: true do %>
-  $("#search").on("keyup", function() {
-    var value = $(this).val().toLowerCase()
-    $(".schema-table").filter(function() {
-      // if found in table name, show entire table
-      // if just found in rows, show row
-
-      var found = $(this).find("thead").text().toLowerCase().indexOf(value) > -1
-
-      if (found) {
-        $(this).find("tbody tr").toggle(true)
-      } else {
-        $(this).find("tbody tr").filter(function() {
-          var found2 = $(this).text().toLowerCase().indexOf(value) > -1
-          $(this).toggle(found2)
-          if (found2) {
-            found = true
-          }
-        })
-      }
-
-      $(this).toggle(found)
-    })
-  }).focus()
-<% end %>
+<main class="mt-20 flex flex-col gap-3" data-controller="blazer--table-filter" data-blazer--table-filter-mode-value="schema">
+  <section class="rounded-2xl border border-[var(--wz-border)] bg-white/95 p-5 shadow-[var(--wz-shadow-sm)]">
+    <input id="search" type="text" placeholder="Search table or column…" class="search form-control query-search w-full rounded-xl border-[var(--wz-border)] bg-[var(--wz-bg-warm)] px-4 py-2.5 text-sm placeholder:text-[var(--wz-text-tertiary)] focus:bg-white" data-blazer--table-filter-target="search" data-action="input->blazer--table-filter#filter" />
+  </section>
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <% @schema.each do |table| %>
+      <section class="schema-card schema-table overflow-hidden rounded-2xl border border-[var(--wz-border)] bg-white/95 shadow-[var(--wz-shadow-sm)]" style="max-width: none;" data-blazer--table-filter-target="filterable">
+        <table class="table text-sm">
+          <thead>
+            <tr>
+              <th colspan="2" class="bg-[var(--wz-bg-warm)] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--wz-accent)]">
+                <% if table[:schema] && table[:schema] != "public" %><%= table[:schema] %>.<% end %><%= table[:table] %>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <% table[:columns].each do |column| %>
+              <tr>
+                <td class="schema-column px-4 py-1.5 font-medium" style="width: 60%;"><%= column[:name] %></td>
+                <td class="text-muted px-4 py-1.5 text-xs"><%= column[:data_type] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+    <% end %>
+  </div>
+</main>

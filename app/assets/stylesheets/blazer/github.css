@@ -1,22 +1,25 @@
 /*
-
-github.com style (c) Vasily Polovnyov <vast@whiteants.net>
-
+  Wezer Syntax Highlighting — dark code block palette
+  Light tokens on dark (#1e1e24) background
+  Warm palette aligned with Wezer design tokens
 */
 
 .hljs {
   display: block;
-  color: #333;
+  color: #e0ddd8;
+  background: transparent;
 }
 
+/* Comments — muted warm stone */
 .hljs-comment,
 .hljs-template_comment,
 .diff .hljs-header,
 .hljs-javadoc {
-  color: #998;
-  font-style: italic
+  color: #78716c;
+  font-style: italic;
 }
 
+/* SQL keywords (SELECT, FROM, WHERE, JOIN, etc.) — warm coral/salmon */
 .hljs-keyword,
 .css .rule .hljs-keyword,
 .hljs-winutils,
@@ -25,101 +28,115 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
 .hljs-subst,
 .hljs-request,
 .hljs-status {
-  color: #333;
-  font-weight: bold
+  color: #f0a8a0;
+  font-weight: 600;
 }
 
+/* Numbers — bright teal accent */
 .hljs-number,
 .hljs-hexcolor,
 .ruby .hljs-constant {
-  color: #099;
+  color: #5ec4c8;
 }
 
+/* Strings — warm golden amber */
 .hljs-string,
 .hljs-tag .hljs-value,
 .hljs-phpdoc,
 .tex .hljs-formula {
-  color: #d14
+  color: #e5b567;
 }
 
+/* Titles, identifiers — soft sky blue */
 .hljs-title,
 .hljs-id,
 .coffeescript .hljs-params,
 .scss .hljs-preprocessor {
-  color: #900;
-  font-weight: bold
+  color: #7eb8da;
+  font-weight: 600;
 }
 
 .javascript .hljs-title,
 .lisp .hljs-title,
 .clojure .hljs-title,
 .hljs-subst {
-  font-weight: normal
+  font-weight: normal;
 }
 
+/* Class/type names — lavender */
 .hljs-class .hljs-title,
 .haskell .hljs-type,
 .vhdl .hljs-literal,
 .tex .hljs-command {
-  color: #458;
-  font-weight: bold
+  color: #b4a7d6;
+  font-weight: 600;
 }
 
+/* Tags — teal */
 .hljs-tag,
 .hljs-tag .hljs-title,
 .hljs-rules .hljs-property,
 .django .hljs-tag .hljs-keyword {
-  color: #000080;
-  font-weight: normal
+  color: #5ec4c8;
+  font-weight: normal;
 }
 
+/* Attributes — soft teal/aqua */
 .hljs-attribute,
 .lisp .hljs-body {
-  color: #008080
+  color: #80cbc4;
 }
 
+/* Variables, regex — soft green */
 .hljs-variable,
 .hljs-regexp {
-  color: #009926;
-  font-weight: bold
+  color: #a5d6a7;
+  font-weight: 600;
 }
 
+/* Symbols — warm peach */
 .hljs-symbol,
 .ruby .hljs-symbol .hljs-string,
 .lisp .hljs-keyword,
 .tex .hljs-special,
 .hljs-prompt {
-  color: #990073
+  color: #e5b567;
 }
 
+/* Built-ins — bright teal */
 .hljs-built_in,
 .lisp .hljs-title,
 .clojure .hljs-built_in {
-  color: #0086b3
+  color: #5ec4c8;
 }
 
+/* Preprocessor — muted */
 .hljs-preprocessor,
 .hljs-pragma,
 .hljs-pi,
 .hljs-doctype,
 .hljs-shebang,
 .hljs-cdata {
-  color: #999;
-  font-weight: bold
+  color: #78716c;
+  font-weight: 600;
 }
 
+/* Diff markers */
 .hljs-deletion {
-  background: #fdd
+  background: rgba(196, 57, 44, 0.2);
+  color: #f0a8a0;
 }
 
 .hljs-addition {
-  background: #dfd
+  background: rgba(61, 139, 94, 0.2);
+  color: #a5d6a7;
 }
 
 .diff .hljs-change {
-  background: #0086b3
+  background: rgba(44, 111, 181, 0.15);
+  color: #7eb8da;
 }
 
 .hljs-chunk {
-  color: #aaa
+  color: #78716c;
 }
