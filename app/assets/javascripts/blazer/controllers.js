@@ -39,6 +39,14 @@
     return rootPath() + "dashboards/" + id
   }
 
+  function aiGeneratePath() {
+    return rootPath() + "ai/generate"
+  }
+
+  function aiSearchPath(params) {
+    return rootPath() + "ai/search?" + new URLSearchParams(params).toString()
+  }
+
   function fuzzysearch(needle, haystack) {
     const hlen = haystack.length
     const nlen = needle.length
@@ -398,7 +406,63 @@
     }
 
     search() {
+      if (this.aiDebounce) clearTimeout(this.aiDebounce)
+
       this.render()
+
+      if (this.aiEnabledValue && this.searchTarget.value.trim().length > 2) {
+        var self = this
+        this.aiDebounce = setTimeout(function () {
+          self.aiSearch()
+        }, 400)
+      } else if (this.hasAiResultsTarget) {
+        this.aiResultsTarget.classList.add("hidden")
+      }
+    }
+
+    aiSearch() {
+      var query = this.searchTarget.value.trim()
+      if (query.length < 3) return
+
+      if (this.hasAiResultsTarget) {
+        this.aiResultsTarget.classList.remove("hidden")
+        this.aiResultsTarget.innerHTML = '<p class="text-sm text-[var(--wz-text-tertiary)] px-5 py-3">Searching with AI…</p>'
+      }
+
+      var self = this
+      fetch(aiSearchPath({ query: query, limit: 5 }), { credentials: "same-origin" })
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              var message = data && data.error ? data.error : "AI search failed"
+              throw new Error(message)
+            }
+            return data
+          })
+        })
+        .then(function (results) {
+          if (!self.hasAiResultsTarget) return
+          if (results.error) {
+            self.aiResultsTarget.innerHTML = '<p class="text-sm text-red-600 px-5 py-3">' + results.error + '</p>'
+            return
+          }
+          if (results.length === 0) {
+            self.aiResultsTarget.innerHTML = '<p class="text-sm text-[var(--wz-text-tertiary)] px-5 py-3">No AI results found</p>'
+            return
+          }
+          self.aiResultsTarget.innerHTML = '<div class="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--wz-accent)]">AI Results</div>' +
+            results.map(function (item) {
+              return '<div class="border-t border-[var(--wz-accent)]/10 px-5 py-2"><a href="' + queryPath(item.to_param) + '" class="text-sm font-medium text-[var(--wz-text)] hover:text-[var(--wz-accent)]">' + item.name + '</a>' +
+                (item.vars ? ' <span class="vars">' + item.vars + '</span>' : '') +
+                '</div>'
+            }).join("")
+        })
+        .catch(function (error) {
+          if (self.hasAiResultsTarget) {
+            self.aiResultsTarget.classList.remove("hidden")
+            self.aiResultsTarget.innerHTML = '<p class="text-sm text-red-600 px-5 py-3">' + (error.message || "AI search failed") + '</p>'
+          }
+        })
     }
 
     loadMore() {
@@ -437,8 +501,9 @@
     queries: Array,
     more: Boolean,
     hasCreator: Boolean,
+    aiEnabled: Boolean,
   }
-  HomeSearchController.targets = ["search", "list", "loading"]
+  HomeSearchController.targets = ["search", "list", "loading", "aiResults"]
 
   class QueryShowController extends Controller {
     connect() {
@@ -681,6 +746,61 @@
       this.runQueryNow()
       this.tableNamesTarget.value = ""
     }
+
+    aiGenerate() {
+      if (!this.hasAiPromptTarget) return
+
+      const prompt = this.aiPromptTarget.value.trim()
+      if (!prompt) return
+
+      this.setAiGenerateButtonState(true)
+
+      var self = this
+      var formData = new FormData()
+      formData.append("prompt", prompt)
+      formData.append("data_source", this.dataSourceTarget.value)
+
+      var csrf = csrfProtect({})
+      Object.keys(csrf).forEach(function (key) {
+        formData.append(key, csrf[key])
+      })
+
+      fetch(aiGeneratePath(), {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      })
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              var message = data && data.error ? data.error : "AI generation failed"
+              throw new Error(message)
+            }
+            return data
+          })
+        })
+        .then(function (data) {
+          if (data.error) {
+            alert(data.error)
+          } else if (data.sql) {
+            self.editor.setValue(data.sql, 1)
+            self.aiPromptTarget.value = ""
+          }
+        })
+        .catch(function (error) {
+          alert(error.message || "AI generation failed")
+        })
+        .finally(function () {
+          self.setAiGenerateButtonState(false)
+        })
+    }
+
+    setAiGenerateButtonState(loading) {
+      if (!this.hasAiGenerateButtonTarget) return
+
+      this.aiGenerateButtonTarget.disabled = loading
+      this.aiGenerateButtonTarget.textContent = loading ? "Generating..." : "Generate"
+    }
   }
   QueryEditorController.values = {
     variableParams: Object,
@@ -697,6 +817,8 @@
     "dataSource",
     "tableNames",
     "editor",
+    "aiPrompt",
+    "aiGenerateButton",
   ]
 
   class VariablesFormController extends Controller {

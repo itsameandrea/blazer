@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { fuzzysearch } from "blazer/utilities/fuzzysearch"
-import { queriesPath, queryPath, dashboardPath } from "blazer/utilities/routes"
+import { queriesPath, queryPath, dashboardPath, aiSearchPath } from "blazer/utilities/routes"
 
 export default class extends Controller {
   static values = {
@@ -8,9 +8,10 @@ export default class extends Controller {
     queries: Array,
     more: Boolean,
     hasCreator: Boolean,
+    aiEnabled: Boolean,
   }
 
-  static targets = ["search", "list", "loading"]
+  static targets = ["search", "list", "loading", "aiResults"]
 
   connect() {
     this.pageSize = 200
@@ -104,7 +105,63 @@ export default class extends Controller {
   }
 
   search() {
+    if (this.aiDebounce) clearTimeout(this.aiDebounce)
+
     this.render()
+
+    if (this.aiEnabledValue && this.searchTarget.value.trim().length > 2) {
+      const self = this
+      this.aiDebounce = setTimeout(function () {
+        self.aiSearch()
+      }, 400)
+    } else if (this.hasAiResultsTarget) {
+      this.aiResultsTarget.classList.add("hidden")
+    }
+  }
+
+  aiSearch() {
+    const query = this.searchTarget.value.trim()
+    if (query.length < 3) return
+
+    if (this.hasAiResultsTarget) {
+      this.aiResultsTarget.classList.remove("hidden")
+      this.aiResultsTarget.innerHTML = '<p class="text-sm text-[var(--wz-text-tertiary)] px-5 py-3">Searching with AI…</p>'
+    }
+
+    const self = this
+    fetch(aiSearchPath({ query: query, limit: 5 }), { credentials: "same-origin" })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            const message = data && data.error ? data.error : "AI search failed"
+            throw new Error(message)
+          }
+          return data
+        })
+      })
+      .then(function (results) {
+        if (!self.hasAiResultsTarget) return
+        if (results.error) {
+          self.aiResultsTarget.innerHTML = '<p class="text-sm text-red-600 px-5 py-3">' + results.error + '</p>'
+          return
+        }
+        if (results.length === 0) {
+          self.aiResultsTarget.innerHTML = '<p class="text-sm text-[var(--wz-text-tertiary)] px-5 py-3">No AI results found</p>'
+          return
+        }
+        self.aiResultsTarget.innerHTML = '<div class="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--wz-accent)]">AI Results</div>' +
+          results.map(function (item) {
+            return '<div class="border-t border-[var(--wz-accent)]/10 px-5 py-2"><a href="' + queryPath(item.to_param) + '" class="text-sm font-medium text-[var(--wz-text)] hover:text-[var(--wz-accent)]">' + item.name + '</a>' +
+              (item.vars ? ' <span class="vars">' + item.vars + '</span>' : '') +
+              '</div>'
+          }).join("")
+      })
+      .catch(function (error) {
+        if (self.hasAiResultsTarget) {
+          self.aiResultsTarget.classList.remove("hidden")
+          self.aiResultsTarget.innerHTML = '<p class="text-sm text-red-600 px-5 py-3">' + (error.message || "AI search failed") + '</p>'
+        }
+      })
   }
 
   loadMore() {

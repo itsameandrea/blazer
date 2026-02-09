@@ -3,7 +3,8 @@
   data-blazer--home-search-dashboards-value="<%= @dashboards.to_json %>"
   data-blazer--home-search-queries-value="<%= @queries.to_json %>"
   data-blazer--home-search-more-value="<%= @more %>"
-  data-blazer--home-search-has-creator-value="<%= Blazer.user_class ? true : false %>">
+  data-blazer--home-search-has-creator-value="<%= Blazer.user_class ? true : false %>"
+  data-blazer--home-search-ai-enabled-value="<%= Blazer::Ai.semantic_search? %>">
   <section id="header" class="rounded-2xl border border-[var(--wz-border)] bg-white/95 p-5 shadow-[var(--wz-shadow-sm)]">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-5">
@@ -38,6 +39,9 @@
       <input id="query-search" type="text" placeholder="Search queries, dashboards, or owners…" class="search form-control query-search w-full rounded-xl border-[var(--wz-border)] bg-[var(--wz-bg-warm)] px-4 py-3 text-sm placeholder:text-[var(--wz-text-tertiary)] focus:bg-white" data-blazer--home-search-target="search" data-action="input->blazer--home-search#search" />
     </div>
   </section>
+  <% if Blazer::Ai.semantic_search? %>
+    <section class="hidden overflow-hidden rounded-2xl border border-[var(--wz-accent)]/20 bg-[var(--wz-accent)]/5 shadow-[var(--wz-shadow-sm)]" data-blazer--home-search-target="aiResults"></section>
+  <% end %>
   <section class="overflow-hidden rounded-2xl border border-[var(--wz-border)] bg-white/95 shadow-[var(--wz-shadow-sm)]">
     <table class="table">
       <thead>

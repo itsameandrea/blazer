@@ -9,6 +9,12 @@
   <%= form_for @query, url: (@query.persisted? ? query_path(@query, params: @variable_params) : queries_path(params: @variable_params)), html: {autocomplete: "off"} do |f| %>
     <section class="grid gap-4 rounded-2xl border border-[var(--wz-border)] bg-white/95 p-5 shadow-[var(--wz-shadow-sm)] lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
       <div id="statement-box" class="min-w-0">
+        <% if Blazer::Ai.query_generation? %>
+          <div class="mb-3 flex items-center gap-2">
+            <input type="text" placeholder="Describe what you want to query…" class="form-control flex-1" data-blazer--query-editor-target="aiPrompt" data-action="keydown.enter->blazer--query-editor#aiGenerate" />
+            <button type="button" class="btn btn-info whitespace-nowrap" data-blazer--query-editor-target="aiGenerateButton" data-action="click->blazer--query-editor#aiGenerate">Generate</button>
+          </div>
+        <% end %>
         <div class="form-group mb-3">
           <%= f.hidden_field :statement, data: { "blazer--query-editor-target": "statement" } %>
           <div id="editor-container">

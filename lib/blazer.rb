@@ -53,7 +53,8 @@ module Blazer
 
   class << self
     attr_accessor :audit, :user_name, :before_action, :from_email, :cache, :transform_statement, :transform_variable,
-                  :check_schedules, :anomaly_checks, :forecasting, :async, :images, :override_csp, :slack_oauth_token, :slack_webhook_url, :mapbox_access_token
+                  :check_schedules, :anomaly_checks, :forecasting, :async, :images, :override_csp, :slack_oauth_token, :slack_webhook_url, :mapbox_access_token,
+                  :ai_enabled
     attr_reader :time_zone
     attr_writer :user_class, :user_method
   end
@@ -65,6 +66,7 @@ module Blazer
   self.async = false
   self.images = false
   self.override_csp = false
+  self.ai_enabled = false
 
   VARIABLE_MESSAGE = 'Variable cannot be used in this position'
   TIMEOUT_MESSAGE = 'Query timed out :('
@@ -276,3 +278,7 @@ end
 require_relative 'blazer/adapters'
 require_relative 'blazer/anomaly_detectors'
 require_relative 'blazer/forecasters'
+
+# ai
+require_relative 'blazer/ai'
+require_relative 'blazer/mcp_server'

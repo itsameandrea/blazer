@@ -7,6 +7,8 @@ import {
   schemaQueriesPath,
   docsQueriesPath,
   tablesQueriesPath,
+  aiGeneratePath,
+  csrfProtect,
 } from "blazer/utilities/routes"
 
 export default class extends Controller {
@@ -26,6 +28,8 @@ export default class extends Controller {
     "dataSource",
     "tableNames",
     "editor",
+    "aiPrompt",
+    "aiGenerateButton",
   ]
 
   connect() {
@@ -229,5 +233,60 @@ export default class extends Controller {
     )
     this.runQueryNow()
     this.tableNamesTarget.value = ""
+  }
+
+  aiGenerate() {
+    if (!this.hasAiPromptTarget) return
+
+    const prompt = this.aiPromptTarget.value.trim()
+    if (!prompt) return
+
+    this.setAiGenerateButtonState(true)
+
+    const self = this
+    const formData = new FormData()
+    formData.append("prompt", prompt)
+    formData.append("data_source", this.dataSourceTarget.value)
+
+    const csrf = csrfProtect({})
+    Object.keys(csrf).forEach(function (key) {
+      formData.append(key, csrf[key])
+    })
+
+    fetch(aiGeneratePath(), {
+      method: "POST",
+      body: formData,
+      credentials: "same-origin",
+    })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            const message = data && data.error ? data.error : "AI generation failed"
+            throw new Error(message)
+          }
+          return data
+        })
+      })
+      .then(function (data) {
+        if (data.error) {
+          alert(data.error)
+        } else if (data.sql) {
+          self.editor.setValue(data.sql, 1)
+          self.aiPromptTarget.value = ""
+        }
+      })
+      .catch(function (error) {
+        alert(error.message || "AI generation failed")
+      })
+      .finally(function () {
+        self.setAiGenerateButtonState(false)
+      })
+  }
+
+  setAiGenerateButtonState(loading) {
+    if (!this.hasAiGenerateButtonTarget) return
+
+    this.aiGenerateButtonTarget.disabled = loading
+    this.aiGenerateButtonTarget.textContent = loading ? "Generating..." : "Generate"
   }
 }

@@ -21,5 +21,15 @@ Blazer::Engine.routes.draw do
     end
   end
 
-  root to: "queries#home"
+  if Blazer.settings.dig('ai', 'enabled')
+    post 'ai/generate', to: 'ai#generate'
+    post 'ai/explain', to: 'ai#explain'
+    get 'ai/search', to: 'ai#search'
+  end
+
+  post 'mcp', to: 'mcp#handle' if Blazer.settings.dig('mcp', 'enabled')
+
+  post 'mcp', to: 'mcp#handle' if Blazer::Ai.mcp?
+
+  root to: 'queries#home'
 end

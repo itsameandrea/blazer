@@ -42,6 +42,9 @@ module Blazer
       Blazer.slack_oauth_token = Blazer.settings['slack_oauth_token'] || ENV['BLAZER_SLACK_OAUTH_TOKEN']
       Blazer.slack_webhook_url = Blazer.settings['slack_webhook_url'] || ENV['BLAZER_SLACK_WEBHOOK_URL']
       Blazer.mapbox_access_token = Blazer.settings['mapbox_access_token'] || ENV['MAPBOX_ACCESS_TOKEN']
+
+      Blazer.ai_enabled = Blazer.settings.dig('ai', 'enabled') || false
+      Blazer::Ai.configure_ruby_llm! if Blazer.ai_enabled
     end
   end
 end

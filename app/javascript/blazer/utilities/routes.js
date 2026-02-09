@@ -33,3 +33,20 @@ export function queryPath(id) {
 export function dashboardPath(id) {
   return rootPath() + "dashboards/" + id
 }
+
+export function aiGeneratePath() {
+  return rootPath() + "ai/generate"
+}
+
+export function aiSearchPath(params) {
+  return rootPath() + "ai/search?" + new URLSearchParams(params).toString()
+}
+
+export function csrfProtect(payload) {
+  const paramNode = document.querySelector("meta[name=csrf-param]")
+  const tokenNode = document.querySelector("meta[name=csrf-token]")
+  const param = paramNode && paramNode.getAttribute("content")
+  const token = tokenNode && tokenNode.getAttribute("content")
+  if (param && token) payload[param] = token
+  return payload
+}
