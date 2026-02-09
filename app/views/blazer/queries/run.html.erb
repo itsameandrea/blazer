@@ -2,9 +2,9 @@
   <div class="alert alert-danger"><%= @error.first(200) %></div>
 <% elsif !@success %>
   <% if @only_chart %>
-    <p class="text-muted">Select variables</p>
+    <p class="text-muted text-sm">Select variables</p>
   <% else %>
-    <div class="alert alert-info">Can’t preview queries with variables</div>
+    <div class="alert alert-info">Can't preview queries with variables</div>
   <% end %>
 <% elsif @cohort_analysis %>
   <% if @cohort_error %>
@@ -15,23 +15,22 @@
 <% else %>
   <% unless @only_chart %>
     <%= render partial: "caching" %>
-    <p class="text-muted" style="margin-bottom: 10px;">
+    <p class="text-muted text-sm mb-3">
       <% if @row_limit && @rows.size > @row_limit %>
         First
         <% @rows = @rows.first(@row_limit) %>
       <% end %>
-      <%= pluralize(@rows.size, "row") %>
-
+      <span class="font-medium"><%= pluralize(@rows.size, "row") %></span>
       <% @checks.select(&:state).each do |check| %>
-        &middot; <small class="check-state <%= check.state.parameterize.gsub("-", "_") %>"><%= link_to check.state.upcase, edit_check_path(check) %></small>
+        <span class="mx-1 text-[var(--wz-text-tertiary)]">&middot;</span>
+        <small class="check-state <%= check.state.parameterize.gsub("-", "_") %>"><%= link_to check.state.upcase, edit_check_path(check) %></small>
         <% if check.try(:message) %>
-          &middot; <%= check.message %>
+          <span class="mx-1 text-[var(--wz-text-tertiary)]">&middot;</span> <%= check.message %>
         <% end %>
       <% end %>
-
       <% if @query && @result.forecastable? && !params[:forecast] %>
-        &middot;
-        <%= link_to "Forecast", query_path(@query, params: {forecast: "t"}.merge(variable_params(@query))) %>
+        <span class="mx-1 text-[var(--wz-text-tertiary)]">&middot;</span>
+        <%= link_to "Forecast", query_path(@query, params: {forecast: "t"}.merge(variable_params(@query))), class: "font-medium" %>
       <% end %>
     </p>
   <% end %>
@@ -74,22 +73,18 @@
     <% end %>
     <% if @markers.any? %>
       <% map_id = SecureRandom.hex %>
-      <%= content_tag :div, nil, id: map_id, style: "height: #{@only_chart ? 300 : 500}px;" %>
-      <%= javascript_tag nonce: true do %>
-        <%= blazer_js_var "mapboxAccessToken", Blazer.mapbox_access_token %>
-        <%= blazer_js_var "markers", @markers %>
-        <%= blazer_js_var "mapId", map_id %>
-        new Mapkick.Map(mapId, markers, {accessToken: mapboxAccessToken, tooltips: {hover: false, html: true}});
-      <% end %>
+      <div data-controller="blazer--map"
+        data-blazer--map-access-token-value="<%= Blazer.mapbox_access_token %>"
+        data-blazer--map-markers-value="<%= @markers.to_json %>">
+        <%= content_tag :div, nil, id: map_id, class: "query-map rounded-xl", style: "height: #{@only_chart ? 300 : 500}px;", data: { "blazer--map-target": "container" } %>
+      </div>
     <% elsif @geojson.any? %>
       <% map_id = SecureRandom.hex %>
-      <%= content_tag :div, nil, id: map_id, style: "height: #{@only_chart ? 300 : 500}px;" %>
-      <%= javascript_tag nonce: true do %>
-        <%= blazer_js_var "mapboxAccessToken", Blazer.mapbox_access_token %>
-        <%= blazer_js_var "geojson", @geojson %>
-        <%= blazer_js_var "mapId", map_id %>
-        new Mapkick.AreaMap(mapId, geojson, {accessToken: mapboxAccessToken, tooltips: {hover: false, html: true}});
-      <% end %>
+      <div data-controller="blazer--map"
+        data-blazer--map-access-token-value="<%= Blazer.mapbox_access_token %>"
+        data-blazer--map-geojson-value="<%= @geojson.to_json %>">
+        <%= content_tag :div, nil, id: map_id, class: "query-map rounded-xl", style: "height: #{@only_chart ? 300 : 500}px;", data: { "blazer--map-target": "container" } %>
+      </div>
     <% elsif chart_type == "line" %>
       <% chart_data = @columns[1..-1].each_with_index.map{ |k, i| {name: blazer_series_name(k), data: @rows.map{ |r| [r[0], r[i + 1]] }, library: series_library[i]} } %>
       <%= line_chart chart_data, **chart_options %>
@@ -115,30 +110,29 @@
       <% if @rows.size == 1 && @rows.first.size == 1 %>
         <% v = @rows.first.first %>
         <% if v.is_a?(String) && v == "" %>
-          <div class="text-muted">empty string</div>
+          <div class="text-muted text-sm italic">empty string</div>
         <% else %>
-          <p style="font-size: 160px;"><%= blazer_format_value(@columns.first, v) %></p>
+          <p class="single-value py-6 text-center"><%= blazer_format_value(@columns.first, v) %></p>
         <% end %>
       <% else %>
         <% @no_chart = true %>
       <% end %>
     <% end %>
-
     <% unless @only_chart && !@no_chart %>
       <% header_width = 100 / @columns.size.to_f %>
-      <div class="results-container">
+      <div class="results-container -mx-5 -mb-5 overflow-x-auto">
         <% if @columns == ["QUERY PLAN"] %>
-          <pre><code><%= @rows.map { |r| r[0] }.join("\n") %></code></pre>
+          <pre class="p-5"><code class="text-sm leading-relaxed"><%= @rows.map { |r| r[0] }.join("\n") %></code></pre>
         <% elsif @columns == ["PLAN"] && @data_source.adapter == "druid" %>
-          <pre><code><%= @rows[0][0] %></code></pre>
+          <pre class="p-5"><code class="text-sm leading-relaxed"><%= @rows[0][0] %></code></pre>
         <% else %>
-          <table class="table results-table">
+          <table class="table results-table text-sm">
             <thead>
               <tr>
                 <% @columns.each_with_index do |key, i| %>
                   <% type = @column_types[i] %>
-                  <th style="width: <%= header_width %>%;" data-sort="<%= type %>">
-                    <div style="min-width: <%= @min_width_types.include?(i) ? 180 : 60 %>px;">
+                  <th style="width: <%= header_width %>%;" data-sort="<%= type %>" class="bg-[var(--wz-bg-warm)] first:rounded-tl-none last:rounded-tr-none">
+                    <div class="header-cell" style="min-width: <%= @min_width_types.include?(i) ? 180 : 60 %>px;">
                       <%= key %>
                     </div>
                   </th>
@@ -150,23 +144,21 @@
                 <tr>
                   <% row.each_with_index do |v, i| %>
                     <% k = @columns[i] %>
-                    <td>
+                    <td class="tabular-nums">
                       <% if v.is_a?(Time) %>
                         <% v = blazer_time_value(@data_source, k, v) %>
                       <% end %>
-
                       <% unless v.nil? %>
                         <% if v.is_a?(String) && v == "" %>
-                          <div class="text-muted">empty string</div>
+                          <div class="text-muted text-xs italic">empty string</div>
                         <% elsif @linked_columns[k] %>
-                          <%= link_to blazer_format_value(k, v), @linked_columns[k].gsub("{value}", u(v.to_s)), target: "_blank" %>
+                          <%= link_to blazer_format_value(k, v), @linked_columns[k].gsub("{value}", u(v.to_s)), target: "_blank", class: "font-medium" %>
                         <% else %>
                           <%= blazer_format_value(k, v) %>
                         <% end %>
                       <% end %>
-
                       <% if (v2 = @smart_values.dig(k, v&.to_s)) %>
-                        <div class="text-muted"><%= v2 %></div>
+                        <div class="text-muted text-xs"><%= v2 %></div>
                       <% end %>
                     </td>
                   <% end %>
@@ -178,6 +170,6 @@
       </div>
     <% end %>
   <% elsif @only_chart %>
-    <p class="text-muted">No rows</p>
+    <p class="text-muted text-sm">No rows</p>
   <% end %>
 <% end %>

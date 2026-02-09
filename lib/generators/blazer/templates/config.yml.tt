@@ -77,3 +77,20 @@ check_schedules:
 #   url: <%%= ENV["BLAZER_UPLOADS_URL"] %>
 #   schema: uploads
 #   data_source: main
+
+# ai-powered features (requires ruby_llm + neighbor gems)
+# run: rails generate blazer:ai && rails db:migrate
+# ai:
+#   enabled: true
+#   model: "anthropic:claude-sonnet-4-5"
+#   embedding_model: "openai:text-embedding-3-small"
+#   embedding_dimensions: 1536
+#   query_generation: true
+#   semantic_search: true
+#   openai_api_key: <%%= ENV["OPENAI_API_KEY"] %>
+#   anthropic_api_key: <%%= ENV["ANTHROPIC_API_KEY"] %>
+#   timeout: 30
+
+# mcp server for external ai agents
+# mcp:
+#   enabled: true
